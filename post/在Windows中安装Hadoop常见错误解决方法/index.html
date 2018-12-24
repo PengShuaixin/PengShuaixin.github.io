@@ -1,0 +1,388 @@
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2"><meta name="theme-color" content="#222"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><meta name="google-site-verification" content="Sy3TMdbnDCisIWfT1qLOOtS_OTgKr-wzvoYKQjJRQK0"><meta name="google-site-verification" content="qFAHaQZH5KtooP4JuggC5HDn_yKFaG_oUQI4lzdbJvs"><meta name="baidu-site-verification" content="2Efu4AQucc"><meta name="baidu-site-verification" content="CybbkpmZkE"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=6.5.0" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.5.0"><link rel="mask-icon" href="/images/logo.svg?v=6.5.0" color="#222"><link rel="manifest" href="/images/manifest.json"><meta name="msapplication-config" content="/images/browserconfig.xml"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"6.5.0",sidebar:{position:"left",display:"hide",offset:12,b2t:!1,scrollpercent:!0,onmobile:!0},fancybox:!1,fastclick:!1,lazyload:!1,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><meta name="description" content="本文的是在Windows10系统中运行的情况,其他版本的系统需自己尝试以下解决办法; Hadoop版本:hadoop-2.7.3 Windows系统中Hadoop的具体配置方法在此就不赘述了,请自行查阅相关文档,下面直接开始上问题解决方法: 错误一:12Error: JAVA_HOME is incorrectly set.       Please update D:\hadoop\hadoop"><meta name="keywords" content="Hadoop"><meta property="og:type" content="article"><meta property="og:title" content="在Windows中安装Hadoop常见错误解决方法"><meta property="og:url" content="https://blog.niclas.cn/post/在Windows中安装Hadoop常见错误解决方法/index.html"><meta property="og:site_name" content="Niclas"><meta property="og:description" content="本文的是在Windows10系统中运行的情况,其他版本的系统需自己尝试以下解决办法; Hadoop版本:hadoop-2.7.3 Windows系统中Hadoop的具体配置方法在此就不赘述了,请自行查阅相关文档,下面直接开始上问题解决方法: 错误一:12Error: JAVA_HOME is incorrectly set.       Please update D:\hadoop\hadoop"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-12-24T13:47:32.710Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="在Windows中安装Hadoop常见错误解决方法"><meta name="twitter:description" content="本文的是在Windows10系统中运行的情况,其他版本的系统需自己尝试以下解决办法; Hadoop版本:hadoop-2.7.3 Windows系统中Hadoop的具体配置方法在此就不赘述了,请自行查阅相关文档,下面直接开始上问题解决方法: 错误一:12Error: JAVA_HOME is incorrectly set.       Please update D:\hadoop\hadoop"><link rel="alternate" href="/atom.xml" title="Niclas" type="application/atom+xml"><link rel="canonical" href="https://blog.niclas.cn/post/在Windows中安装Hadoop常见错误解决方法/"><script type="text/javascript" id="page.configurations">CONFIG.page={sidebar:""}</script><title>在Windows中安装Hadoop常见错误解决方法 | Niclas</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-1"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-1")</script><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-2"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-2")</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?5637b3223b9a5a6ea263a030335ce71d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?801a98ea015efc5c911bef9c4aed3b18";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><noscript><style type="text/css">.sidebar-inner,.use-motion .brand,.use-motion .collection-title,.use-motion .comments,.use-motion .menu-item,.use-motion .motion-element,.use-motion .pagination,.use-motion .post-block,.use-motion .post-body,.use-motion .post-header{opacity:initial}.use-motion .logo,.use-motion .site-subtitle,.use-motion .site-title{opacity:initial;top:initial}.logo-line-after i{right:initial}</style></noscript></head><body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Niclas</span><span class="logo-line-after"><i></i></span></a></div><h1 class="site-subtitle" itemprop="description">Blog</h1></div><div class="site-nav-toggle"> <button aria-label="切换导航栏"><span class="btn-bar"></span><span class="btn-bar"></span><span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i></span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"> <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-categories" itemscope="" itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="https://blog.niclas.cn/post/在Windows中安装Hadoop常见错误解决方法/"><span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta itemprop="name" content="PengShuaixin"><meta itemprop="description" content=""><meta itemprop="image" content="/images/avatar.gif"></span><span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization"><meta itemprop="name" content="Niclas"></span><header class="post-header"><h2 class="post-title" itemprop="name headline">在Windows中安装Hadoop常见错误解决方法</h2><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time title="创建时间：2018-08-26 13:31:21" itemprop="dateCreated datePublished" datetime="2018-08-26T13:31:21+08:00">2018-08-26</time> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-calendar-check-o"></i></span> <span class="post-meta-item-text">更新于</span> <time title="修改时间：2018-12-24 21:47:32" itemprop="dateModified" datetime="2018-12-24T21:47:32+08:00">2018-12-24</time></span> <span class="post-category"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span> <span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Hadoop/" itemprop="url" rel="index"><span itemprop="name">Hadoop</span></a></span></span> <span class="post-comments-count"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-comment-o"></i></span> <a href="/post/在Windows中安装Hadoop常见错误解决方法/#comments" itemprop="discussionUrl"><span class="post-meta-item-text">评论数：</span><span class="post-comments-count valine-comment-count" data-xid="/post/在Windows中安装Hadoop常见错误解决方法/" itemprop="commentCount"></span></a></span> <span id="/post/在Windows中安装Hadoop常见错误解决方法/" class="leancloud_visitors" data-flag-title="在Windows中安装Hadoop常见错误解决方法"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-eye"></i></span> <span class="post-meta-item-text">阅读次数：</span><span class="leancloud-visitors-count"></span></span><div class="post-symbolscount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span> <span class="post-meta-item-text">本文字数：</span> <span title="本文字数">5.8k</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-clock-o"></i></span> <span class="post-meta-item-text">阅读时长 &asymp;</span> <span title="阅读时长">5 分钟</span></div></div></header><div class="post-body" itemprop="articleBody"><p>本文的是在Windows10系统中运行的情况,其他版本的系统需自己尝试以下解决办法;</p><p>Hadoop版本:<span class="exturl" data-url="aHR0cHM6Ly9hcmNoaXZlLmFwYWNoZS5vcmcvZGlzdC9oYWRvb3AvY29tbW9uL2hhZG9vcC0yLjcuMy8=" title="https://archive.apache.org/dist/hadoop/common/hadoop-2.7.3/">hadoop-2.7.3<i class="fa fa-external-link"></i></span></p><p>Windows系统中Hadoop的具体配置方法在此就不赘述了,请自行查阅相关文档,下面直接开始上问题解决方法:</p><p><strong>错误一:</strong><br></p><figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Error: </span>JAVA_HOME is incorrectly set.</span><br><span class="line">       Please update D:\hadoop\hadoop<span class="string">-2</span>.7.3\conf\hadoop-env.cmd</span><br></pre></td></tr></table></figure><p></p><p>该错误代码是Hadoop中java环境变量配置错误导致的,修改Hadoop配置文件即可解决</p><p>我的Hadoop安装目录在: D:\hadoop\hadoop-2.7.3,下面就以此为例,</p><p>配置文件存放在hadoop中的etc目录下,我们打开D:\hadoop\hadoop-2.7.3\etc\hadoop\hadoop-env.cmd文件,<br>找到如下代码:</p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="builtin-name">set</span> <span class="attribute">JAVA_HOME</span>=%JAVA_HOME%</span><br></pre></td></tr></table></figure><p>将%JAVA_HOME%用具体的jdk安装路径替代,<br>比如说Java的安装路径为C:\Program Files\Java\,jdk版本为:jdk1.8.0_181<br>则将上面的代码替换成如下代码:<br></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="builtin-name">set</span> <span class="attribute">JAVA_HOME</span>=C:\PROGRA~1\Java\jdk1.8.0_181</span><br></pre></td></tr></table></figure><p></p><hr><p>PS:<br>此处的路径C:\Program Files中带有空格,直接写该路径系统无法正常识别,故在此用软链代替,将C:\Program Files写成<br>C:\PROGRA~1;<br>此处也可以用引号包围,即将C:\Program Files写成<br>C:”\Program Files”</p><hr><p><strong>错误二:</strong></p><p>启动hadoop进程时,namenode,nodemanager,datanode进程报如下错误代码:<br></p><figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">java.lang.UnsatisfiedLinkError: </span><span class="keyword">org.apache.hadoop.io.nativeio.NativeIO$Windows.access0(Ljava/lang/String;I)Z</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.io.nativeio.NativeIO$Windows.access0(Native </span>Method)</span><br><span class="line">        <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.io.nativeio.NativeIO$Windows.access(NativeIO.java:609)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.fs.FileUtil.canRead(FileUtil.java:977)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.util.DiskChecker.checkAccessByFileMethods(DiskChecker.java:187)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.util.DiskChecker.checkDirAccess(DiskChecker.java:174)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.util.DiskChecker.checkDir(DiskChecker.java:157)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode$DataNodeDiskChecker.checkDir(DataNode.java:2345)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.checkStorageLocations(DataNode.java:2387)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.makeInstance(DataNode.java:2369)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.instantiateDataNode(DataNode.java:2261)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.createDataNode(DataNode.java:2308)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.secureMain(DataNode.java:2485)</span></span><br><span class="line"><span class="keyword"> </span>       <span class="built_in">at</span> <span class="keyword">org.apache.hadoop.hdfs.server.datanode.DataNode.main(DataNode.java:2509)</span></span><br></pre></td></tr></table></figure><p></p><p>该错误是电脑java版本导致的错误,部分电脑安装的是32位java环境.<br>本机使用如下版本java(32位)测试时,会报上面所述错误代码,<br></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java version <span class="string">"1.8.0_161"</span></span><br><span class="line">Java(TM) SE Runtime Environment (build 1.8.0_161-b12)</span><br><span class="line">Java HotSpot(TM)<span class="built_in"> Client </span>VM (build 25.161-b12, mixed mode)</span><br></pre></td></tr></table></figure><p></p><p>具体解决方案如下:<br>1.先用控制面板卸载计算机上的java;<br>2.重新下载安装一个新的64位java;<br>本文使用的是:<span class="exturl" data-url="aHR0cDovL3d3dy5vcmFjbGUuY29tL3RlY2huZXR3b3JrL2phdmEvamF2YXNlL2Rvd25sb2Fkcy9qZGs4LWRvd25sb2Fkcy0yMTMzMTUxLmh0bWw=" title="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html">jdk-8u181-windows-x64.exe<i class="fa fa-external-link"></i></span><br>版本信息如下:<br></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java version <span class="string">"1.8.0_181"</span></span><br><span class="line">Java(TM) SE Runtime Environment (build 1.8.0_181-b13)</span><br><span class="line">Java HotSpot(TM) 64-Bit<span class="built_in"> Server </span>VM (build 25.181-b13, mixed mode)</span><br></pre></td></tr></table></figure><p></p><p>3.删除hadoop生成的namenode,datanode数据文件(文件路径在自己的hdfs-site.xml配置文件内有);<br>比如hdfs-site.xml配置如下:<br></p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="params">&lt;configuration&gt;</span></span><br><span class="line"> <span class="params">&lt;property&gt;</span></span><br><span class="line">        <span class="params">&lt;name&gt;</span>dfs.replication<span class="params">&lt;/name&gt;</span></span><br><span class="line">        <span class="params">&lt;value&gt;</span><span class="number">1</span><span class="params">&lt;/value&gt;</span></span><br><span class="line">    <span class="params">&lt;/property&gt;</span></span><br><span class="line">    <span class="params">&lt;property&gt;</span></span><br><span class="line">        <span class="params">&lt;name&gt;</span>dfs.namenode.name.dir<span class="params">&lt;/name&gt;</span></span><br><span class="line">        <span class="params">&lt;value&gt;</span>file:/D:<span class="meta-keyword">/hadoopdata/</span>namenode<span class="params">&lt;/value&gt;</span></span><br><span class="line">    <span class="params">&lt;/property&gt;</span></span><br><span class="line">    <span class="params">&lt;property&gt;</span></span><br><span class="line">        <span class="params">&lt;name&gt;</span>dfs.datanode.data.dir<span class="params">&lt;/name&gt;</span></span><br><span class="line">        <span class="params">&lt;value&gt;</span>file:/D:<span class="meta-keyword">/hadoopdata/</span>datanode<span class="params">&lt;/value&gt;</span></span><br><span class="line">    <span class="params">&lt;/property&gt;</span></span><br><span class="line"><span class="params">&lt;/configuration&gt;</span></span><br></pre></td></tr></table></figure><p></p><p>那么就删除D:\hadoopdata文件夹<br>4.重新格式化HDFS<br></p><figure class="highlight dos"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hdfs namenode -<span class="built_in">format</span></span><br></pre></td></tr></table></figure><p></p><p>5.再次启动hadoop进程即可成功启动.</p><p>PS:一般情况3,4步省略也可以成功启动hadoop的4个进程,如果有报错就操作一下3,4步,下面再添加一种数据文件导致错误的解决方法</p><hr><p><strong>错误三:</strong></p><p>hdaoop启动时datanode进程开启失败,系统错误代码如下:<br></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">java.io.IOException: Incompatible clusterIDs <span class="keyword">in</span> D:\hadoopdata\datanode: namenode clusterID = CID-6f4dc54c-ee55-465a-b484-7a917fa1af74; datanode clusterID = CID-15453d83-8724-4e54-a770-f3a96712f52d</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.doTransition(DataStorage.java:775)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.loadStorageDirectory(DataStorage.java:300)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.loadDataStorage(DataStorage.java:416)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.addStorageLocations(DataStorage.java:395)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.recoverTransitionRead(DataStorage.java:573)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataNode.initStorage(DataNode.java:1362)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataNode.initBlockPool(DataNode.java:1327)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPOfferService.verifyAndSetNamespaceInfo(BPOfferService.java:317)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.connectToNNAndHandshake(BPServiceActor.java:223)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.<span class="builtin-name">run</span>(BPServiceActor.java:802)</span><br><span class="line">        at java.lang.Thread.<span class="builtin-name">run</span>(Thread.java:748)</span><br><span class="line">18/08/26 13:04:39 FATAL datanode.DataNode: Initialization failed <span class="keyword">for</span> Block<span class="built_in"> pool </span>&lt;registering&gt; (Datanode Uuid unassigned)<span class="built_in"> service </span><span class="keyword">to</span> localhost/127.0.0.1:9000. Exiting.</span><br><span class="line">java.io.IOException: All specified directories are failed <span class="keyword">to</span> load.</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataStorage.recoverTransitionRead(DataStorage.java:574)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataNode.initStorage(DataNode.java:1362)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.DataNode.initBlockPool(DataNode.java:1327)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPOfferService.verifyAndSetNamespaceInfo(BPOfferService.java:317)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.connectToNNAndHandshake(BPServiceActor.java:223)</span><br><span class="line">        at org.apache.hadoop.hdfs.server.datanode.BPServiceActor.<span class="builtin-name">run</span>(BPServiceActor.java:802)</span><br><span class="line">        at java.lang.Thread.<span class="builtin-name">run</span>(Thread.java:748)</span><br></pre></td></tr></table></figure><p></p><p>首先,我们还是先讨论一下出现该错误的原因吧,<br>我们在安装hadoop的过程中多少会有些问题,也常常会多次格式化HDFS文件系统,也正是因为这种多次格式化的操作才容易导致此错误,不仅仅是在Windows系统,在Linux系统中也很常见.<br>为什么会出现这种情况呢?<br>可以回想一下,我们在操作HDFS格式化时,并没有将datanode的数据文件删掉.从而因为namenode clusterID和datanode clusterID不同而datanode进程无法开启,那要怎么解决呢?</p><p>解决方案如下:<br>1.停掉hadoop所有进程;<br>2.删除datanode文件夹,datanode文件夹具体路径在上述”错误二”中有提到过,在此就不赘述了<br>3.重新启动hadoop即可解决问题</p><p><strong>Hadoop安装方法</strong></p><p><span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQvYXJ0aWNsZS9kZXRhaWxzLzgyOTE0ODI3" title="https://blog.csdn.net/u010993514/article/details/82914827">在Windows中安装Hadoop（非虚拟机安装）<i class="fa fa-external-link"></i></span></p></div><div><div style="padding:10px 0;margin:20px auto;width:90%;text-align:center"><div></div> <button id="rewardButton" disable="enable" onclick='var qr=document.getElementById("QR");"none"===qr.style.display?qr.style.display="block":qr.style.display="none"'> <span>打赏</span></button><div id="QR" style="display:none"><div id="wechat" style="display:inline-block"> <img id="wechat_qr" src="/images/wechatpay.png" alt="PengShuaixin 微信支付"><p>微信支付</p></div><div id="alipay" style="display:inline-block"> <img id="alipay_qr" src="/images/alipay.png" alt="PengShuaixin 支付宝"><p>支付宝</p></div></div></div></div><footer class="post-footer"><div class="post-tags"><a href="/tags/Hadoop/" rel="tag"><i class="fa fa-tag"></i> Hadoop</a></div><div class="post-nav"><div class="post-nav-next post-nav-item"></div><span class="post-nav-divider"></span><div class="post-nav-prev post-nav-item"> <a href="/post/Linux系统配置SSH免密登录-多主机互通/" rel="prev" title="Linux系统配置SSH免密登录(多主机互通)">Linux系统配置SSH免密登录(多主机互通)<i class="fa fa-chevron-right"></i></a></div></div></footer></div><div><div><div style="text-align:center;color:#ccc;font-size:14px">------ 本文结束------</div></div></div></article></div></div><div class="comments" id="comments"></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span><span class="sidebar-toggle-line sidebar-toggle-line-middle"></span><span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div id="sidebar-dimmer"></div><div class="sidebar-inner"><section class="site-overview-wrap sidebar-panel sidebar-panel-active"><div class="site-overview"><div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person"> <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="PengShuaixin"><p class="site-author-name" itemprop="name">PengShuaixin</p><p class="site-description motion-element" itemprop="description"></p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"> <a href="/archives/"><span class="site-state-item-count">14</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"> <a href="/categories/index.html"><span class="site-state-item-count">5</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"> <a href="/tags/index.html"><span class="site-state-item-count">27</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="feed-link motion-element"><a href="/atom.xml" rel="alternate"><i class="fa fa-rss"></i> RSS</a></div><div class="links-of-author motion-element"><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9naXRodWIuY29tL1BlbmdTaHVhaXhpbg==" title="GitHub &rarr; https://github.com/PengShuaixin"><i class="fa fa-fw fa-github"></i> GitHub</span></span><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQ=" title="CSDN &rarr; https://blog.csdn.net/u010993514"><i class="fa fa-fw fa-globe"></i> CSDN</span></span></div></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2018</span><span class="with-love" id="animate"><i class="fa fa-heart"></i></span> <span class="author" itemprop="copyrightHolder">PengShuaixin</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-area-chart"></i></span> <span class="post-meta-item-text">站点总字数：</span> <span title="站点总字数">200k</span></div><div class="busuanzi-count"><script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span class="site-uv" title="总访客量"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span><span class="site-pv" title="总访问量"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span></div><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66106613",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66107215",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i> <span id="scrollpercent"><span>0</span>%</span></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" color="0,0,0" opacity="0.3" zindex="-1" count="80" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js"></script><script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/js/src/utils.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/motion.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scrollspy.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/post-details.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=6.5.0"></script><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine/dist/Valine.min.js"></script><script type="text/javascript">var GUEST=["nick","mail","link"],guest="nick,mail,link";guest=guest.split(",").filter(function(e){return-1<GUEST.indexOf(e)}),new Valine({el:"#comments",verify:!0,notify:!1,appId:"yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz",appKey:"yYG26hWbUNuiaQJBn91mWLBD",placeholder:"Just go go",avatar:"mm",meta:guest,pageSize:"10",visitor:!1})</script><script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+        // ref: https://github.com/ForbesLindesay/unescape-html
+        var unescapeHtml = function(html) {
+          return String(html)
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, '\'')
+            .replace(/&#x3A;/g, ':')
+            // replace all the other &#x; chars
+            .replace(/&#(\d+);/g, function (m, p) { return String.fromCharCode(p); })
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+        };
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                content = unescapeHtml(content);
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><script>
+    
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+
+      Counter('get', '/classes/Counter', { where: JSON.stringify({ url }) })
+        .done(function ({ results }) {
+          if (results.length > 0) {
+            var counter = results[0];
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text(counter.time + 1);
+            
+            Counter('put', `/classes/Counter/${counter.objectId}`, JSON.stringify({ time: { "__op":"Increment", "amount":1 } }))
+            
+            .fail(function ({ responseJSON }) {
+                console.log('Failed to save Visitor num, with error message: ' + responseJSON.error);
+            })
+          } else {
+            
+              var $element = $(document.getElementById(url));
+              $element.find('.leancloud-visitors-count').text('Counter not initialized! See more at console err msg.');
+              console.error('ATTENTION! LeanCloud counter has security bug, see here how to solve it: https://github.com/theme-next/hexo-leancloud-counter-security. \n But you also can use LeanCloud without security, by set \'security\' option to \'false\'.');
+            
+          }
+        })
+      .fail(function ({ responseJSON }) {
+        console.log('LeanCloud Counter Error:' + responseJSON.code + " " + responseJSON.error);
+      });
+    }
+    
+
+    $(function() {
+      $.get('https://app-router.leancloud.cn/2/route?appId=' + "yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz")
+        .done(function ({ api_server }) {
+          var Counter = function (method, url, data) {
+            return $.ajax({
+              method: method,
+              url: `https://${api_server}/1.1${url}`,
+              headers: {
+                'X-LC-Id': "yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz",
+                'X-LC-Key': "yYG26hWbUNuiaQJBn91mWLBD",
+                'Content-Type': 'application/json',
+              },
+              data: data,
+            });
+          };
+          
+          addCount(Counter);
+          
+        })
+    });
+  </script><script>!function(){var t=document.createElement("script"),e=window.location.protocol.split(":")[0];t.src="https"===e?"https://zz.bdstatic.com/linksubmit/push.js":"http://push.zhanzhang.baidu.com/push.js";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}()</script><script type="text/javascript" src="/js/src/js.cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/exturl.js?v=6.5.0"></script><style>.copy-btn{display:inline-block;padding:6px 12px;font-size:13px;font-weight:700;line-height:20px;color:#333;white-space:nowrap;vertical-align:middle;cursor:pointer;background-color:#eee;background-image:linear-gradient(#fcfcfc,#eee);border:1px solid #d5d5d5;border-radius:3px;user-select:none;outline:0}.highlight-wrap .copy-btn{transition:opacity .3s ease-in-out;opacity:0;padding:2px 6px;position:absolute;right:4px;top:8px}.highlight-wrap .copy-btn:focus,.highlight-wrap:hover .copy-btn{opacity:1}.highlight-wrap{position:relative}</style><script>$(".highlight").each(function(t,e){var n=$("<div>").addClass("highlight-wrap");$(e).after(n),n.append($("<button>").addClass("copy-btn").append("复制").on("click",function(t){var e=$(this).parent().find(".code").find(".line").map(function(t,e){return $(e).text()}).toArray().join("\n"),n=document.createElement("textarea");document.body.appendChild(n),n.style.position="absolute",n.style.top="0px",n.style.left="0px",n.value=e,n.select(),n.focus();var o=document.execCommand("copy");document.body.removeChild(n),o?$(this).text("复制成功"):$(this).text("复制失败"),$(this).blur()})).on("mouseleave",function(t){var e=$(this).find(".copy-btn");setTimeout(function(){e.text("复制")},300)}).append(e)})</script></body></html>
