@@ -1,4 +1,1149 @@
-<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2"><meta name="theme-color" content="#222"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><meta name="google-site-verification" content="Sy3TMdbnDCisIWfT1qLOOtS_OTgKr-wzvoYKQjJRQK0"><meta name="google-site-verification" content="qFAHaQZH5KtooP4JuggC5HDn_yKFaG_oUQI4lzdbJvs"><meta name="baidu-site-verification" content="2Efu4AQucc"><meta name="baidu-site-verification" content="CybbkpmZkE"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=6.5.0" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.5.0"><link rel="mask-icon" href="/images/logo.svg?v=6.5.0" color="#222"><link rel="manifest" href="/images/manifest.json"><meta name="msapplication-config" content="/images/browserconfig.xml"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"6.5.0",sidebar:{position:"left",display:"hide",offset:12,b2t:!1,scrollpercent:!0,onmobile:!0},fancybox:!1,fastclick:!1,lazyload:!1,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><meta name="description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，"><meta name="keywords" content="Spark,粗粒度,细粒度"><meta property="og:type" content="article"><meta property="og:title" content="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）"><meta property="og:url" content="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/index.html"><meta property="og:site_name" content="Niclas"><meta property="og:description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-12-24T13:35:14.342Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）"><meta name="twitter:description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，"><link rel="alternate" href="/atom.xml" title="Niclas" type="application/atom+xml"><link rel="canonical" href="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/"><script type="text/javascript" id="page.configurations">CONFIG.page={sidebar:""}</script><title>Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式） | Niclas</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-1"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-1")</script><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-2"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-2")</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?5637b3223b9a5a6ea263a030335ce71d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?801a98ea015efc5c911bef9c4aed3b18";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><noscript><style type="text/css">.sidebar-inner,.use-motion .brand,.use-motion .collection-title,.use-motion .comments,.use-motion .menu-item,.use-motion .motion-element,.use-motion .pagination,.use-motion .post-block,.use-motion .post-body,.use-motion .post-header{opacity:initial}.use-motion .logo,.use-motion .site-subtitle,.use-motion .site-title{opacity:initial;top:initial}.logo-line-after i{right:initial}</style></noscript></head><body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Niclas</span><span class="logo-line-after"><i></i></span></a></div><h1 class="site-subtitle" itemprop="description">Blog</h1></div><div class="site-nav-toggle"> <button aria-label="切换导航栏"><span class="btn-bar"></span><span class="btn-bar"></span><span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i></span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"> <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/"><span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta itemprop="name" content="PengShuaixin"><meta itemprop="description" content=""><meta itemprop="image" content="/images/avatar.gif"></span><span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization"><meta itemprop="name" content="Niclas"></span><header class="post-header"><h2 class="post-title" itemprop="name headline">Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）</h2><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time title="创建时间：2018-12-24 13:39:30 / 修改时间：21:35:14" itemprop="dateCreated datePublished" datetime="2018-12-24T13:39:30+08:00">2018-12-24</time></span> <span class="post-category"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span> <span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Spark/" itemprop="url" rel="index"><span itemprop="name">Spark</span></a></span></span> <span class="post-comments-count"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-comment-o"></i></span> <a href="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/#comments" itemprop="discussionUrl"><span class="post-meta-item-text">评论数：</span><span class="post-comments-count valine-comment-count" data-xid="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/" itemprop="commentCount"></span></a></span> <span id="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/" class="leancloud_visitors" data-flag-title="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-eye"></i></span> <span class="post-meta-item-text">阅读次数：</span><span class="leancloud-visitors-count"></span></span><div class="post-symbolscount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span> <span class="post-meta-item-text">本文字数：</span> <span title="本文字数">2.4k</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-clock-o"></i></span> <span class="post-meta-item-text">阅读时长 &asymp;</span> <span title="阅读时长">2 分钟</span></div></div></header><div class="post-body" itemprop="articleBody"><p>本文来自<span class="exturl" data-url="aHR0cDovL2Rvbmd4aWNoZW5nLm9yZy8=" title="http://dongxicheng.org/">董的博客<i class="fa fa-external-link"></i></span>,原文地址: <span class="exturl" data-url="aHR0cDovL2Rvbmd4aWNoZW5nLm9yZy9mcmFtZXdvcmstb24teWFybi9hcGFjaGUtc3BhcmstY29tcGFyaW5nLXRocmVlLWRlcGxveWluZy13YXlzLw==" title="http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/">http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/<i class="fa fa-external-link"></i></span></p><hr><p>目前Apache Spark支持三种分布式部署方式，分别是<strong>standalone、spark on mesos和 spark on YARN</strong><br>其中，第一种类似于MapReduce 1.0所采用的模式，内部实现了容错性和资源管理，后两种则是未来发展的趋势，部分容错性和资源管理交由统一的资源管理系统完成：让Spark运行在一个通用的资源管理系统之上，这样可以与其他计算框架，比如MapReduce，公用一个集群资源，最大的好处是降低运维成本和提高资源利用率（资源按需分配）。<br>本文将介绍这三种部署方式，并比较其优缺点。</p><h2 id="standalone模式"><a href="#standalone模式" class="headerlink" title="standalone模式"></a>standalone模式</h2><p>即独立模式，自带完整的服务，可单独部署到一个集群中，无需依赖任何其他资源管理系统。从一定程度上说，该模式是其他两种的基础。借鉴Spark开发模式，我们可以得到一种开发新型计算框架的一般思路：先设计出它的standalone模式，为了快速开发，起初不需要考虑服务（比如:master/slave）的容错性，之后再开发相应的wrapper，将standalone模式下的服务原封不动的部署到资源管理系统yarn或者mesos上，由资源管理系统负责服务本身的容错。目前Spark在standalone模式下是没有任何单点故障问题的，这是借助zookeeper实现的，思想类似于Hbase master单点故障解决方案。将Spark standalone与MapReduce比较，会发现它们两个在架构上是完全一致的：</p><p>1) 都是由master/slaves服务组成的，且起初master均存在单点故障，后来均通过zookeeper解决（Apache MRv1的JobTracker仍存在单点问题，但CDH版本得到了解决）；</p><p>2) 各个节点上的资源被抽象成粗粒度的slot，有多少slot就能同时运行多少task。不同的是，MapReduce将slot分为map slot和reduce slot，它们分别只能供Map Task和Reduce Task使用，而不能共享，这是MapReduce资源利率低效的原因之一，而Spark则更优化一些，它不区分slot类型，只有一种slot，可以供各种类型的Task使用，这种方式可以提高资源利用率，但是不够灵活，不能为不同类型的Task定制slot资源。总之，这两种方式各有优缺点。</p><h2 id="Spark-On-Mesos模式"><a href="#Spark-On-Mesos模式" class="headerlink" title="Spark On Mesos模式"></a>Spark On Mesos模式</h2><p>这是很多公司采用的模式，官方推荐这种模式（当然，原因之一是血缘关系）。正是由于Spark开发之初就考虑到支持Mesos，因此，目前而言，Spark运行在Mesos上会比运行在YARN上更加灵活，更加自然。目前在Spark On Mesos环境中，用户可选择两种调度模式之一运行自己的应用程序（可参考Andrew Xia的“<span class="exturl" data-url="aHR0cDovL3ZkaXNrLndlaWJvLmNvbS9zL3ptX2VJVlAtVHB5cUs=" title="http://vdisk.weibo.com/s/zm_eIVP-TpyqK">Mesos Scheduling Mode on Spark<i class="fa fa-external-link"></i></span>”）：</p><p>1) <strong>粗粒度模式（Coarse-grained Mode）</strong>：每个应用程序的运行环境由一个Dirver和若干个Executor组成，其中，每个Executor占用若干资源，内部可运行多个Task（对应多少个“slot”）。应用程序的各个任务正式运行之前，需要将运行环境中的资源全部申请好，且运行过程中要一直占用这些资源，即使不用，最后程序运行结束后，回收这些资源。举个例子，比如你提交应用程序时，指定使用5个executor运行你的应用程序，每个executor占用5GB内存和5个CPU，每个executor内部设置了5个slot，则Mesos需要先为executor分配资源并启动它们，之后开始调度任务。另外，在程序运行过程中，mesos的master和slave并不知道executor内部各个task的运行情况，executor直接将任务状态通过内部的通信机制汇报给Driver，从一定程度上可以认为，每个应用程序利用mesos搭建了一个虚拟集群自己使用。</p><p>2) <strong>细粒度模式（Fine-grained Mode）</strong>：鉴于粗粒度模式会造成大量资源浪费，Spark On Mesos还提供了另外一种调度模式：细粒度模式，这种模式类似于现在的云计算，思想是按需分配。与粗粒度模式一样，应用程序启动时，先会启动executor，但每个executor占用资源仅仅是自己运行所需的资源，不需要考虑将来要运行的任务，之后，mesos会为每个executor动态分配资源，每分配一些，便可以运行一个新任务，单个Task运行完之后可以马上释放对应的资源。每个Task会汇报状态给Mesos slave和Mesos Master，便于更加细粒度管理和容错，这种调度模式类似于MapReduce调度模式，每个Task完全独立，优点是便于资源控制和隔离，但缺点也很明显，短作业运行延迟大。</p><h2 id="Spark-On-YARN模式"><a href="#Spark-On-YARN模式" class="headerlink" title="Spark On YARN模式"></a>Spark On YARN模式</h2><p>这是一种最有前景的部署模式。但限于YARN自身的发展，目前仅支持粗粒度模式（Coarse-grained Mode）。这是由于YARN上的Container资源是不可以动态伸缩的，一旦Container启动之后，可使用的资源不能再发生变化，不过这个已经在YARN计划（具体参考：<span class="exturl" data-url="aHR0cHM6Ly9pc3N1ZXMuYXBhY2hlLm9yZy9qaXJhL2Jyb3dzZS9ZQVJOLTExOTfvvInkuK3kuobjgII=" title="https://issues.apache.org/jira/browse/YARN-1197）中了。">https://issues.apache.org/jira/browse/YARN-1197）中了。<i class="fa fa-external-link"></i></span></p><p>总之，这三种分布式部署方式各有利弊，通常需要根据公司情况决定采用哪种方案。进行方案选择时，往往要考虑公司的技术路线（采用Hadoop生态系统还是其他生态系统）、服务器资源（资源有限的话就不要考虑standalone模式了）、相关技术人才储备等。</p></div><div><div style="padding:10px 0;margin:20px auto;width:90%;text-align:center"><div></div> <button id="rewardButton" disable="enable" onclick='var qr=document.getElementById("QR");"none"===qr.style.display?qr.style.display="block":qr.style.display="none"'> <span>打赏</span></button><div id="QR" style="display:none"><div id="wechat" style="display:inline-block"> <img id="wechat_qr" src="/images/wechatpay.png" alt="PengShuaixin 微信支付"><p>微信支付</p></div><div id="alipay" style="display:inline-block"> <img id="alipay_qr" src="/images/alipay.png" alt="PengShuaixin 支付宝"><p>支付宝</p></div></div></div></div><footer class="post-footer"><div class="post-tags"><a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a><a href="/tags/粗粒度/" rel="tag"><i class="fa fa-tag"></i> 粗粒度</a><a href="/tags/细粒度/" rel="tag"><i class="fa fa-tag"></i> 细粒度</a></div><div class="post-nav"><div class="post-nav-next post-nav-item"><a href="/post/IntelliJ-IDEA-2018-3常用配置图解/" rel="next" title="IntelliJ IDEA 2018.3常用配置图解"><i class="fa fa-chevron-left"></i> IntelliJ IDEA 2018.3常用配置图解</a></div><span class="post-nav-divider"></span><div class="post-nav-prev post-nav-item"></div></div></footer></div><div><div><div style="text-align:center;color:#ccc;font-size:14px">------ 本文结束------</div></div></div></article></div></div><div class="comments" id="comments"></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span><span class="sidebar-toggle-line sidebar-toggle-line-middle"></span><span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div id="sidebar-dimmer"></div><div class="sidebar-inner"><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap"> 文章目录</li><li class="sidebar-nav-overview" data-target="site-overview-wrap"> 站点概览</li></ul><section class="site-overview-wrap sidebar-panel"><div class="site-overview"><div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person"> <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="PengShuaixin"><p class="site-author-name" itemprop="name">PengShuaixin</p><p class="site-description motion-element" itemprop="description"></p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"> <a href="/archives/"><span class="site-state-item-count">14</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"> <a href="/categories/index.html"><span class="site-state-item-count">5</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"> <a href="/tags/index.html"><span class="site-state-item-count">27</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="feed-link motion-element"><a href="/atom.xml" rel="alternate"><i class="fa fa-rss"></i> RSS</a></div><div class="links-of-author motion-element"><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9naXRodWIuY29tL1BlbmdTaHVhaXhpbg==" title="GitHub &rarr; https://github.com/PengShuaixin"><i class="fa fa-fw fa-github"></i> GitHub</span></span><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQ=" title="CSDN &rarr; https://blog.csdn.net/u010993514"><i class="fa fa-fw fa-globe"></i> CSDN</span></span></div></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class="post-toc"><div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#standalone模式"><span class="nav-text">standalone模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spark-On-Mesos模式"><span class="nav-text">Spark On Mesos模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spark-On-YARN模式"><span class="nav-text">Spark On YARN模式</span></a></li></ol></div></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright">&copy; 2018 – <span itemprop="copyrightYear">2019</span><span class="with-love" id="animate"><i class="fa fa-heart"></i></span> <span class="author" itemprop="copyrightHolder">PengShuaixin</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-area-chart"></i></span> <span class="post-meta-item-text">站点总字数：</span> <span title="站点总字数">200k</span></div><div class="busuanzi-count"><script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span class="site-uv" title="总访客量"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span><span class="site-pv" title="总访问量"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span></div><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66106613",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66107215",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i> <span id="scrollpercent"><span>0</span>%</span></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" color="0,0,0" opacity="0.3" zindex="-1" count="80" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js"></script><script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/js/src/utils.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/motion.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scrollspy.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/post-details.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=6.5.0"></script><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine/dist/Valine.min.js"></script><script type="text/javascript">var GUEST=["nick","mail","link"],guest="nick,mail,link";guest=guest.split(",").filter(function(e){return-1<GUEST.indexOf(e)}),new Valine({el:"#comments",verify:!0,notify:!1,appId:"yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz",appKey:"yYG26hWbUNuiaQJBn91mWLBD",placeholder:"Just go go",avatar:"mm",meta:guest,pageSize:"10",visitor:!1})</script><script type="text/javascript">
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="google-site-verification" content="Sy3TMdbnDCisIWfT1qLOOtS_OTgKr-wzvoYKQjJRQK0">
+
+
+  <meta name="google-site-verification" content="qFAHaQZH5KtooP4JuggC5HDn_yKFaG_oUQI4lzdbJvs">
+
+
+
+
+
+
+
+  <meta name="baidu-site-verification" content="2Efu4AQucc">
+
+
+  <meta name="baidu-site-verification" content="CybbkpmZkE">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.5.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.5.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.5.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.5.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.5.0" color="#222">
+
+
+  <link rel="manifest" href="/images/manifest.json">
+
+
+  <meta name="msapplication-config" content="/images/browserconfig.xml">
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.5.0',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":true,"onmobile":true},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，">
+<meta name="keywords" content="Spark,粗粒度,细粒度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）">
+<meta property="og:url" content="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/index.html">
+<meta property="og:site_name" content="Niclas">
+<meta property="og:description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-24T13:35:14.342Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）">
+<meta name="twitter:description" content="本文来自董的博客,原文地址: http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/  目前Apache Spark支持三种分布式部署方式，分别是standalone、spark on mesos和 spark on YARN其中，第一种类似于MapReduce 1.0所采用的模式，">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Niclas" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式） | Niclas</title>
+  
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-129104805-1');
+</script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-129104805-2');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5637b3223b9a5a6ea263a030335ce71d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?801a98ea015efc5c911bef9c4aed3b18";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Niclas</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.niclas.cn/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PengShuaixin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Niclas">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-12-24 13:39:30 / 修改时间：21:35:14" itemprop="dateCreated datePublished" datetime="2018-12-24T13:39:30+08:00">2018-12-24</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Spark/" itemprop="url" rel="index"><span itemprop="name">Spark</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">评论数：</span> <span class="post-comments-count valine-comment-count" data-xid="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/post/Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）/" class="leancloud_visitors" data-flag-title="Spark中的三种分布式部署方式对比（粗粒度模式、细粒度模式）">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数：</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">2.4k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">2 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文来自<span class="exturl" data-url="aHR0cDovL2Rvbmd4aWNoZW5nLm9yZy8=" title="http://dongxicheng.org/">董的博客<i class="fa fa-external-link"></i></span>,原文地址: <span class="exturl" data-url="aHR0cDovL2Rvbmd4aWNoZW5nLm9yZy9mcmFtZXdvcmstb24teWFybi9hcGFjaGUtc3BhcmstY29tcGFyaW5nLXRocmVlLWRlcGxveWluZy13YXlzLw==" title="http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/">http://dongxicheng.org/framework-on-yarn/apache-spark-comparing-three-deploying-ways/<i class="fa fa-external-link"></i></span></p>
+<hr>
+<p>目前Apache Spark支持三种分布式部署方式，分别是<strong>standalone、spark on mesos和 spark on YARN</strong><br>其中，第一种类似于MapReduce 1.0所采用的模式，内部实现了容错性和资源管理，后两种则是未来发展的趋势，部分容错性和资源管理交由统一的资源管理系统完成：让Spark运行在一个通用的资源管理系统之上，这样可以与其他计算框架，比如MapReduce，公用一个集群资源，最大的好处是降低运维成本和提高资源利用率（资源按需分配）。<br>本文将介绍这三种部署方式，并比较其优缺点。</p>
+<h2 id="standalone模式"><a href="#standalone模式" class="headerlink" title="standalone模式"></a>standalone模式</h2><p>即独立模式，自带完整的服务，可单独部署到一个集群中，无需依赖任何其他资源管理系统。从一定程度上说，该模式是其他两种的基础。借鉴Spark开发模式，我们可以得到一种开发新型计算框架的一般思路：先设计出它的standalone模式，为了快速开发，起初不需要考虑服务（比如:master/slave）的容错性，之后再开发相应的wrapper，将standalone模式下的服务原封不动的部署到资源管理系统yarn或者mesos上，由资源管理系统负责服务本身的容错。目前Spark在standalone模式下是没有任何单点故障问题的，这是借助zookeeper实现的，思想类似于Hbase master单点故障解决方案。将Spark standalone与MapReduce比较，会发现它们两个在架构上是完全一致的：</p>
+<p>1)  都是由master/slaves服务组成的，且起初master均存在单点故障，后来均通过zookeeper解决（Apache MRv1的JobTracker仍存在单点问题，但CDH版本得到了解决）；</p>
+<p>2) 各个节点上的资源被抽象成粗粒度的slot，有多少slot就能同时运行多少task。不同的是，MapReduce将slot分为map slot和reduce slot，它们分别只能供Map Task和Reduce Task使用，而不能共享，这是MapReduce资源利率低效的原因之一，而Spark则更优化一些，它不区分slot类型，只有一种slot，可以供各种类型的Task使用，这种方式可以提高资源利用率，但是不够灵活，不能为不同类型的Task定制slot资源。总之，这两种方式各有优缺点。</p>
+<h2 id="Spark-On-Mesos模式"><a href="#Spark-On-Mesos模式" class="headerlink" title="Spark On Mesos模式"></a>Spark On Mesos模式</h2><p>这是很多公司采用的模式，官方推荐这种模式（当然，原因之一是血缘关系）。正是由于Spark开发之初就考虑到支持Mesos，因此，目前而言，Spark运行在Mesos上会比运行在YARN上更加灵活，更加自然。目前在Spark On Mesos环境中，用户可选择两种调度模式之一运行自己的应用程序（可参考Andrew Xia的“<span class="exturl" data-url="aHR0cDovL3ZkaXNrLndlaWJvLmNvbS9zL3ptX2VJVlAtVHB5cUs=" title="http://vdisk.weibo.com/s/zm_eIVP-TpyqK">Mesos Scheduling Mode on Spark<i class="fa fa-external-link"></i></span>”）：</p>
+<p>1)   <strong>粗粒度模式（Coarse-grained Mode）</strong>：每个应用程序的运行环境由一个Dirver和若干个Executor组成，其中，每个Executor占用若干资源，内部可运行多个Task（对应多少个“slot”）。应用程序的各个任务正式运行之前，需要将运行环境中的资源全部申请好，且运行过程中要一直占用这些资源，即使不用，最后程序运行结束后，回收这些资源。举个例子，比如你提交应用程序时，指定使用5个executor运行你的应用程序，每个executor占用5GB内存和5个CPU，每个executor内部设置了5个slot，则Mesos需要先为executor分配资源并启动它们，之后开始调度任务。另外，在程序运行过程中，mesos的master和slave并不知道executor内部各个task的运行情况，executor直接将任务状态通过内部的通信机制汇报给Driver，从一定程度上可以认为，每个应用程序利用mesos搭建了一个虚拟集群自己使用。</p>
+<p>2)   <strong>细粒度模式（Fine-grained Mode）</strong>：鉴于粗粒度模式会造成大量资源浪费，Spark On Mesos还提供了另外一种调度模式：细粒度模式，这种模式类似于现在的云计算，思想是按需分配。与粗粒度模式一样，应用程序启动时，先会启动executor，但每个executor占用资源仅仅是自己运行所需的资源，不需要考虑将来要运行的任务，之后，mesos会为每个executor动态分配资源，每分配一些，便可以运行一个新任务，单个Task运行完之后可以马上释放对应的资源。每个Task会汇报状态给Mesos slave和Mesos Master，便于更加细粒度管理和容错，这种调度模式类似于MapReduce调度模式，每个Task完全独立，优点是便于资源控制和隔离，但缺点也很明显，短作业运行延迟大。</p>
+<h2 id="Spark-On-YARN模式"><a href="#Spark-On-YARN模式" class="headerlink" title="Spark On YARN模式"></a>Spark On YARN模式</h2><p>这是一种最有前景的部署模式。但限于YARN自身的发展，目前仅支持粗粒度模式（Coarse-grained Mode）。这是由于YARN上的Container资源是不可以动态伸缩的，一旦Container启动之后，可使用的资源不能再发生变化，不过这个已经在YARN计划（具体参考：<span class="exturl" data-url="aHR0cHM6Ly9pc3N1ZXMuYXBhY2hlLm9yZy9qaXJhL2Jyb3dzZS9ZQVJOLTExOTfvvInkuK3kuobjgII=" title="https://issues.apache.org/jira/browse/YARN-1197）中了。">https://issues.apache.org/jira/browse/YARN-1197）中了。<i class="fa fa-external-link"></i></span></p>
+<p>总之，这三种分布式部署方式各有利弊，通常需要根据公司情况决定采用哪种方案。进行方案选择时，往往要考虑公司的技术路线（采用Hadoop生态系统还是其他生态系统）、服务器资源（资源有限的话就不要考虑standalone模式了）、相关技术人才储备等。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="PengShuaixin 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="PengShuaixin 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a>
+          
+            <a href="/tags/粗粒度/" rel="tag"><i class="fa fa-tag"></i> 粗粒度</a>
+          
+            <a href="/tags/细粒度/" rel="tag"><i class="fa fa-tag"></i> 细粒度</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/IntelliJ-IDEA-2018-3常用配置图解/" rel="next" title="IntelliJ IDEA 2018.3常用配置图解">
+                <i class="fa fa-chevron-left"></i> IntelliJ IDEA 2018.3常用配置图解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  <div>
+    
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">------ 本文结束------</div>
+    
+</div>
+    
+  </div>
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="PengShuaixin">
+            
+              <p class="site-author-name" itemprop="name">PengShuaixin</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">27</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <span class="exturl" data-url="aHR0cHM6Ly9naXRodWIuY29tL1BlbmdTaHVhaXhpbg==" title="GitHub &rarr; https://github.com/PengShuaixin"><i class="fa fa-fw fa-github"></i>GitHub</span>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQ=" title="CSDN &rarr; https://blog.csdn.net/u010993514"><i class="fa fa-fw fa-globe"></i>CSDN</span>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#standalone模式"><span class="nav-text">standalone模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spark-On-Mesos模式"><span class="nav-text">Spark On Mesos模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spark-On-YARN模式"><span class="nav-text">Spark On YARN模式</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">PengShuaixin</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">200k</span>
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="总访客量">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="总访问量">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+	  hm.type = "text/javascript";
+      hm.src = "http://tajs.qq.com/stats?sId=66106613";
+	  hm.charset = "UTF-8"
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+	  hm.type = "text/javascript";
+      hm.src = "http://tajs.qq.com/stats?sId=66107215";
+	  hm.charset = "UTF-8"
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+      
+        
+      
+  
+  <script type="text/javascript" color="0,0,0" opacity="0.3" zindex="-1" count="80" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.5.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.5.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.5.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.5.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.5.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz',
+        appKey: 'yYG26hWbUNuiaQJBn91mWLBD',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: false
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
     // Popup Window;
     var isfetched = false;
     var isXml = true;
@@ -331,7 +1476,16 @@
         onPopupClose();
       }
     });
-  </script><script>
+  </script>
+
+
+
+
+
+  
+
+  
+  <script>
     
     function addCount(Counter) {
       var $visitors = $(".leancloud_visitors");
@@ -385,4 +1539,121 @@
           
         })
     });
-  </script><script>!function(){var t=document.createElement("script"),e=window.location.protocol.split(":")[0];t.src="https"===e?"https://zz.bdstatic.com/linksubmit/push.js":"http://push.zhanzhang.baidu.com/push.js";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}()</script><script type="text/javascript" src="/js/src/js.cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/exturl.js?v=6.5.0"></script><style>.copy-btn{display:inline-block;padding:6px 12px;font-size:13px;font-weight:700;line-height:20px;color:#333;white-space:nowrap;vertical-align:middle;cursor:pointer;background-color:#eee;background-image:linear-gradient(#fcfcfc,#eee);border:1px solid #d5d5d5;border-radius:3px;user-select:none;outline:0}.highlight-wrap .copy-btn{transition:opacity .3s ease-in-out;opacity:0;padding:2px 6px;position:absolute;right:4px;top:8px}.highlight-wrap .copy-btn:focus,.highlight-wrap:hover .copy-btn{opacity:1}.highlight-wrap{position:relative}</style><script>$(".highlight").each(function(t,e){var n=$("<div>").addClass("highlight-wrap");$(e).after(n),n.append($("<button>").addClass("copy-btn").append("复制").on("click",function(t){var e=$(this).parent().find(".code").find(".line").map(function(t,e){return $(e).text()}).toArray().join("\n"),n=document.createElement("textarea");document.body.appendChild(n),n.style.position="absolute",n.style.top="0px",n.style.left="0px",n.value=e,n.select(),n.focus();var o=document.execCommand("copy");document.body.removeChild(n),o?$(this).text("复制成功"):$(this).text("复制失败"),$(this).blur()})).on("mouseleave",function(t){var e=$(this).find(".copy-btn");setTimeout(function(){e.text("复制")},300)}).append(e)})</script></body></html>
+  </script>
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=6.5.0"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.5.0"></script>
+
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=6.5.0"></script>
+
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('复制成功')
+          else $(this).text('复制失败')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('复制')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+
+  
+
+</body>
+</html>

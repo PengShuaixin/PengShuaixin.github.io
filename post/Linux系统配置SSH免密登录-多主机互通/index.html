@@ -1,4 +1,1174 @@
-<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2"><meta name="theme-color" content="#222"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><meta name="google-site-verification" content="Sy3TMdbnDCisIWfT1qLOOtS_OTgKr-wzvoYKQjJRQK0"><meta name="google-site-verification" content="qFAHaQZH5KtooP4JuggC5HDn_yKFaG_oUQI4lzdbJvs"><meta name="baidu-site-verification" content="2Efu4AQucc"><meta name="baidu-site-verification" content="CybbkpmZkE"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=6.5.0" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.5.0"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.5.0"><link rel="mask-icon" href="/images/logo.svg?v=6.5.0" color="#222"><link rel="manifest" href="/images/manifest.json"><meta name="msapplication-config" content="/images/browserconfig.xml"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"6.5.0",sidebar:{position:"left",display:"hide",offset:12,b2t:!1,scrollpercent:!0,onmobile:!0},fancybox:!1,fastclick:!1,lazyload:!1,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><meta name="description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master"><meta name="keywords" content="Linux,SSH,服务器"><meta property="og:type" content="article"><meta property="og:title" content="Linux系统配置SSH免密登录(多主机互通)"><meta property="og:url" content="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/index.html"><meta property="og:site_name" content="Niclas"><meta property="og:description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-12-24T13:15:17.160Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Linux系统配置SSH免密登录(多主机互通)"><meta name="twitter:description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master"><link rel="alternate" href="/atom.xml" title="Niclas" type="application/atom+xml"><link rel="canonical" href="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/"><script type="text/javascript" id="page.configurations">CONFIG.page={sidebar:""}</script><title>Linux系统配置SSH免密登录(多主机互通) | Niclas</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-1"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-1")</script><script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-2"></script><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-129104805-2")</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?5637b3223b9a5a6ea263a030335ce71d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><script type="text/javascript">var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?801a98ea015efc5c911bef9c4aed3b18";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><noscript><style type="text/css">.sidebar-inner,.use-motion .brand,.use-motion .collection-title,.use-motion .comments,.use-motion .menu-item,.use-motion .motion-element,.use-motion .pagination,.use-motion .post-block,.use-motion .post-body,.use-motion .post-header{opacity:initial}.use-motion .logo,.use-motion .site-subtitle,.use-motion .site-title{opacity:initial;top:initial}.logo-line-after i{right:initial}</style></noscript></head><body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Niclas</span><span class="logo-line-after"><i></i></span></a></div><h1 class="site-subtitle" itemprop="description">Blog</h1></div><div class="site-nav-toggle"> <button aria-label="切换导航栏"><span class="btn-bar"></span><span class="btn-bar"></span><span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>归档</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i></span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"> <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-categories" itemscope="" itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/"><span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta itemprop="name" content="PengShuaixin"><meta itemprop="description" content=""><meta itemprop="image" content="/images/avatar.gif"></span><span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization"><meta itemprop="name" content="Niclas"></span><header class="post-header"><h2 class="post-title" itemprop="name headline">Linux系统配置SSH免密登录(多主机互通)</h2><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time title="创建时间：2018-08-26 20:16:11" itemprop="dateCreated datePublished" datetime="2018-08-26T20:16:11+08:00">2018-08-26</time> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-calendar-check-o"></i></span> <span class="post-meta-item-text">更新于</span> <time title="修改时间：2018-12-24 21:15:17" itemprop="dateModified" datetime="2018-12-24T21:15:17+08:00">2018-12-24</time></span> <span class="post-category"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-folder-o"></i></span> <span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a></span></span> <span class="post-comments-count"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-comment-o"></i></span> <a href="/post/Linux系统配置SSH免密登录-多主机互通/#comments" itemprop="discussionUrl"><span class="post-meta-item-text">评论数：</span><span class="post-comments-count valine-comment-count" data-xid="/post/Linux系统配置SSH免密登录-多主机互通/" itemprop="commentCount"></span></a></span> <span id="/post/Linux系统配置SSH免密登录-多主机互通/" class="leancloud_visitors" data-flag-title="Linux系统配置SSH免密登录(多主机互通)"><span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-eye"></i></span> <span class="post-meta-item-text">阅读次数：</span><span class="leancloud-visitors-count"></span></span><div class="post-symbolscount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span> <span class="post-meta-item-text">本文字数：</span> <span title="本文字数">2.7k</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-clock-o"></i></span> <span class="post-meta-item-text">阅读时长 &asymp;</span> <span title="阅读时长">2 分钟</span></div></div></header><div class="post-body" itemprop="articleBody"><p><strong>本文测试环境:</strong></p><p>Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso<br>虚拟机版本:VMware-workstation-full-12.1.0-3272444</p><p><strong>操作成功后的效果:</strong><br>每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录.</p><p>现用虚拟机搭建三台主机,IP分别是:<br>192.168.33.201 master1<br>192.168.33.202 master2<br>192.168.33.203 master3</p><p>SSH免密登录的原理在这里就不做介绍了,有兴趣的可以自己去网上找资料了解一下,在这里就直接上方法了.</p><hr><p>PS:<br>authorized_keys:存放远程免密登录的公钥,主要通过这个文件记录多台机器的公钥<br>id_rsa : 生成的私钥文件<br>id_rsa.pub ： 生成的公钥文件<br>know_hosts : 已知的主机公钥清单</p><hr><p><strong>方法一:</strong></p><p>先选择其中一台主机,在该主机上生成公钥和私钥,再将公钥和私钥上传到其他主机上,具体操作如下:<br>在这里我就选择master1进行操作以下操作了:<br>1.登录Linux系统,根据自己实际情况选择登录用户,执行下面代码生成公钥私钥对:<br></p><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh-keygen -t rsa</span></span><br></pre></td></tr></table></figure><p></p><p>会出现如下提示,一路回车就行<br></p><figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">[root<span class="meta">@master1</span> ~]<span class="comment"># ssh-keygen -t rsa</span></span><br><span class="line">Generating public/private rsa key pair.</span><br><span class="line">Enter file in which to save the key (/root/.ssh/id_rsa): //这里回车</span><br><span class="line">Enter passphrase (empty for no passphrase): //这里回车</span><br><span class="line">Enter same passphrase again: //这里回车</span><br><span class="line">Your identification has been saved in /root/.ssh/id_rsa.</span><br><span class="line">Your public key has been saved in /root/.ssh/id_rsa.pub.</span><br><span class="line">The key fingerprint is:</span><br><span class="line">df:71:f6:3e:bb:bb:6c:38:91:f4:bc:70:a1:dd:86:a9 root<span class="meta">@master1</span></span><br><span class="line">The key's randomart image is:</span><br><span class="line">+--[ RSA 2048]----+</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">             . . </span>|</span><br><span class="line">|<span class="string">        S   o Ooo</span>|</span><br><span class="line">|<span class="string">         . . Oo*o</span>|</span><br><span class="line">|<span class="string">          . ..=.o</span>|</span><br><span class="line">|<span class="string">            Eo.= </span>|</span><br><span class="line">|<span class="string">              o*B</span>|</span><br><span class="line">+-----------------+</span><br></pre></td></tr></table></figure><p></p><p>注意：在程序提示输入passphrase时直接输入回车，表示无证书密码。</p><p>2.生成秘钥的默认目录为:~/.ssh,该目录下会生成下面两个文件:</p><p>id_rsa</p><p>id_rsa.pub</p><p>2.实现本地免密登录,将id_rsa.pub中的内容拷贝到authorized_keys</p><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-<span class="keyword">copy</span>-<span class="built_in">id</span> localhost</span><br></pre></td></tr></table></figure><p>~/.ssh目录下会生成一个新的文件:authorized_keys</p><p>3.完成上述步骤后就可以本地SSH免密登录了,运行下面代码出现一行登录时间就代表本地SSH免密登录成功</p><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh localhost</span></span><br></pre></td></tr></table></figure><p>下面是本地SSH免密登录成功的标志:<br></p><figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[root@master1 ~]</span>$ ssh localhost</span><br><span class="line">Last login: Mon Aug <span class="number">27</span> <span class="number">08</span>:<span class="number">41</span>:<span class="number">20</span> <span class="number">2018</span> from <span class="number">192.168.33.2</span></span><br></pre></td></tr></table></figure><p></p><p>4.如果本机能成功SSH免密登录,<br>先退出SSH登录:</p><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">exit</span></span><br></pre></td></tr></table></figure><p>再执行以下代码将本机的~/.ssh文件夹复制到其他主机上:</p><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/</span>* <span class="number">192.168</span>.<span class="number">33.202</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/</span>* <span class="number">192.168</span>.<span class="number">33.203</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure><p>提示输入密码时,输入远程主机密码回车即可</p><p>5.测试SSH免密登录,这里就不发测试了,大家自行测试</p><hr><p><strong>方法二:</strong></p><p>将每台机器生成的id_rsa.pub追加添加到同一个authorized_keys内,然后再将该authorized_keys发送到其他远程主机上.</p><p>具体步骤如下:<br>1.在master1,master2,master3上分别执行:</p><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh-keygen -t rsa</span></span><br></pre></td></tr></table></figure><p>与”方法一”内所述一样,一路回车即可,生成秘钥的默认目录为~/.ssh<br>2.接着制作包含master1,master2,master3中所有id_rsa.pub的authorized_keys文件:<br>此处在master 1上生成authorized_keys文件,<br>在master1上执行:</p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure><p>在master2上执行:<br></p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure><p></p><p>在master3上执行:<br></p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure><p></p><p>注意:此处代码中的”-i”千万不要忘记了!!!</p><p>3.通过scp将master1上生成的authorized_keys文件发送给其他主机:<br>在master1上执行<br></p><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/authorized</span>_keys <span class="number">192.168</span>.<span class="number">33.202</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure><p></p><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/authorized</span>_keys <span class="number">192.168</span>.<span class="number">33.203</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure><p>提示输入密码时,输入远程主机密码回车即可</p><p>5.测试SSH免密登录,可先测试本机免密登录,再测试远程主机远程登录<br>本机登录可用:<br></p><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh localhost</span></span><br></pre></td></tr></table></figure><p></p><p>远程登录将localhost换成远程主机IP即可<br>比如在master1上登录master2,就在master1上执行:<br></p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.202</span></span><br></pre></td></tr></table></figure><p></p><p><strong>相关故障处理:</strong><br>部分人在配置完成后可能出现无法登录的情况,错误代码我不太记得了,欢迎各位读者在下面补充.<br>造成故障的原因是之前配置过程中配置失败,然后重新对SSH免密登录进行配置,配置完成后无法正常登录,解决方法如下:</p><p>删除各主机下~/.ssh目录中的known_hosts文件:<br></p><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf ~<span class="regexp">/.ssh/</span>known_hosts</span><br></pre></td></tr></table></figure><p></p></div><div><div style="padding:10px 0;margin:20px auto;width:90%;text-align:center"><div></div> <button id="rewardButton" disable="enable" onclick='var qr=document.getElementById("QR");"none"===qr.style.display?qr.style.display="block":qr.style.display="none"'> <span>打赏</span></button><div id="QR" style="display:none"><div id="wechat" style="display:inline-block"> <img id="wechat_qr" src="/images/wechatpay.png" alt="PengShuaixin 微信支付"><p>微信支付</p></div><div id="alipay" style="display:inline-block"> <img id="alipay_qr" src="/images/alipay.png" alt="PengShuaixin 支付宝"><p>支付宝</p></div></div></div></div><footer class="post-footer"><div class="post-tags"><a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a><a href="/tags/SSH/" rel="tag"><i class="fa fa-tag"></i> SSH</a><a href="/tags/服务器/" rel="tag"><i class="fa fa-tag"></i> 服务器</a></div><div class="post-nav"><div class="post-nav-next post-nav-item"><a href="/post/在Windows中安装Hadoop常见错误解决方法/" rel="next" title="在Windows中安装Hadoop常见错误解决方法"><i class="fa fa-chevron-left"></i> 在Windows中安装Hadoop常见错误解决方法</a></div><span class="post-nav-divider"></span><div class="post-nav-prev post-nav-item"> <a href="/post/Eclipse中GitHub插件的简单使用/" rel="prev" title="Eclipse中GitHub插件的简单使用">Eclipse中GitHub插件的简单使用<i class="fa fa-chevron-right"></i></a></div></div></footer></div><div><div><div style="text-align:center;color:#ccc;font-size:14px">------ 本文结束------</div></div></div></article></div></div><div class="comments" id="comments"></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span><span class="sidebar-toggle-line sidebar-toggle-line-middle"></span><span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div id="sidebar-dimmer"></div><div class="sidebar-inner"><section class="site-overview-wrap sidebar-panel sidebar-panel-active"><div class="site-overview"><div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person"> <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="PengShuaixin"><p class="site-author-name" itemprop="name">PengShuaixin</p><p class="site-description motion-element" itemprop="description"></p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"> <a href="/archives/"><span class="site-state-item-count">14</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"> <a href="/categories/index.html"><span class="site-state-item-count">5</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"> <a href="/tags/index.html"><span class="site-state-item-count">27</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="feed-link motion-element"><a href="/atom.xml" rel="alternate"><i class="fa fa-rss"></i> RSS</a></div><div class="links-of-author motion-element"><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9naXRodWIuY29tL1BlbmdTaHVhaXhpbg==" title="GitHub &rarr; https://github.com/PengShuaixin"><i class="fa fa-fw fa-github"></i> GitHub</span></span><span class="links-of-author-item"><span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQ=" title="CSDN &rarr; https://blog.csdn.net/u010993514"><i class="fa fa-fw fa-globe"></i> CSDN</span></span></div></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright">&copy; 2018 – <span itemprop="copyrightYear">2019</span><span class="with-love" id="animate"><i class="fa fa-heart"></i></span> <span class="author" itemprop="copyrightHolder">PengShuaixin</span> <span class="post-meta-divider">|</span><span class="post-meta-item-icon"><i class="fa fa-area-chart"></i></span> <span class="post-meta-item-text">站点总字数：</span> <span title="站点总字数">200k</span></div><div class="busuanzi-count"><script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span class="site-uv" title="总访客量"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span><span class="site-pv" title="总访问量"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span></div><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66106613",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script><script type="text/javascript">!function(){var t=document.createElement("script");t.type="text/javascript",t.src="http://tajs.qq.com/stats?sId=66107215",t.charset="UTF-8";var e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(t,e)}()</script></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i> <span id="scrollpercent"><span>0</span>%</span></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" color="0,0,0" opacity="0.3" zindex="-1" count="80" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js"></script><script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/js/src/utils.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/motion.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scrollspy.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/post-details.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=6.5.0"></script><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine/dist/Valine.min.js"></script><script type="text/javascript">var GUEST=["nick","mail","link"],guest="nick,mail,link";guest=guest.split(",").filter(function(e){return-1<GUEST.indexOf(e)}),new Valine({el:"#comments",verify:!0,notify:!1,appId:"yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz",appKey:"yYG26hWbUNuiaQJBn91mWLBD",placeholder:"Just go go",avatar:"mm",meta:guest,pageSize:"10",visitor:!1})</script><script type="text/javascript">
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="google-site-verification" content="Sy3TMdbnDCisIWfT1qLOOtS_OTgKr-wzvoYKQjJRQK0">
+
+
+  <meta name="google-site-verification" content="qFAHaQZH5KtooP4JuggC5HDn_yKFaG_oUQI4lzdbJvs">
+
+
+
+
+
+
+
+  <meta name="baidu-site-verification" content="2Efu4AQucc">
+
+
+  <meta name="baidu-site-verification" content="CybbkpmZkE">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.5.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.5.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.5.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.5.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.5.0" color="#222">
+
+
+  <link rel="manifest" href="/images/manifest.json">
+
+
+  <meta name="msapplication-config" content="/images/browserconfig.xml">
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.5.0',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":true,"onmobile":true},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master">
+<meta name="keywords" content="Linux,SSH,服务器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux系统配置SSH免密登录(多主机互通)">
+<meta property="og:url" content="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/index.html">
+<meta property="og:site_name" content="Niclas">
+<meta property="og:description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-24T13:15:17.160Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux系统配置SSH免密登录(多主机互通)">
+<meta name="twitter:description" content="本文测试环境: Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso虚拟机版本:VMware-workstation-full-12.1.0-3272444 操作成功后的效果:每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录. 现用虚拟机搭建三台主机,IP分别是:192.168.33.201    master">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Niclas" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Linux系统配置SSH免密登录(多主机互通) | Niclas</title>
+  
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-129104805-1');
+</script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-129104805-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-129104805-2');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5637b3223b9a5a6ea263a030335ce71d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?801a98ea015efc5c911bef9c4aed3b18";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Niclas</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-categories" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.niclas.cn/post/Linux系统配置SSH免密登录-多主机互通/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PengShuaixin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Niclas">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Linux系统配置SSH免密登录(多主机互通)
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-08-26 20:16:11" itemprop="dateCreated datePublished" datetime="2018-08-26T20:16:11+08:00">2018-08-26</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2018-12-24 21:15:17" itemprop="dateModified" datetime="2018-12-24T21:15:17+08:00">2018-12-24</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/post/Linux系统配置SSH免密登录-多主机互通/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">评论数：</span> <span class="post-comments-count valine-comment-count" data-xid="/post/Linux系统配置SSH免密登录-多主机互通/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/post/Linux系统配置SSH免密登录-多主机互通/" class="leancloud_visitors" data-flag-title="Linux系统配置SSH免密登录(多主机互通)">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数：</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">2.7k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">2 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>本文测试环境:</strong></p>
+<p>Linux系统镜像:CentOS-7-x86_64-DVD-1804.iso<br>虚拟机版本:VMware-workstation-full-12.1.0-3272444</p>
+<p><strong>操作成功后的效果:</strong><br>每台主机可以本机SSH免密登录,也可以与其他主机之间实现SSH免密登录,也就是每台主机都可以一对多SSH免密登录.</p>
+<p>现用虚拟机搭建三台主机,IP分别是:<br>192.168.33.201    master1<br>192.168.33.202    master2<br>192.168.33.203    master3</p>
+<p>SSH免密登录的原理在这里就不做介绍了,有兴趣的可以自己去网上找资料了解一下,在这里就直接上方法了.</p>
+<hr>
+<p>PS:<br>authorized_keys:存放远程免密登录的公钥,主要通过这个文件记录多台机器的公钥<br>id_rsa : 生成的私钥文件<br>id_rsa.pub ： 生成的公钥文件<br>know_hosts : 已知的主机公钥清单</p>
+<hr>
+<p><strong>方法一:</strong></p>
+<p>先选择其中一台主机,在该主机上生成公钥和私钥,再将公钥和私钥上传到其他主机上,具体操作如下:<br>在这里我就选择master1进行操作以下操作了:<br>1.登录Linux系统,根据自己实际情况选择登录用户,执行下面代码生成公钥私钥对:<br><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh-keygen -t rsa</span></span><br></pre></td></tr></table></figure></p>
+<p>会出现如下提示,一路回车就行<br><figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">[root<span class="meta">@master1</span> ~]<span class="comment"># ssh-keygen -t rsa</span></span><br><span class="line">Generating public/private rsa key pair.</span><br><span class="line">Enter file in which to save the key (/root/.ssh/id_rsa): //这里回车</span><br><span class="line">Enter passphrase (empty for no passphrase): //这里回车</span><br><span class="line">Enter same passphrase again: //这里回车</span><br><span class="line">Your identification has been saved in /root/.ssh/id_rsa.</span><br><span class="line">Your public key has been saved in /root/.ssh/id_rsa.pub.</span><br><span class="line">The key fingerprint is:</span><br><span class="line">df:71:f6:3e:bb:bb:6c:38:91:f4:bc:70:a1:dd:86:a9 root<span class="meta">@master1</span></span><br><span class="line">The key's randomart image is:</span><br><span class="line">+--[ RSA 2048]----+</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">                 </span>|</span><br><span class="line">|<span class="string">             . . </span>|</span><br><span class="line">|<span class="string">        S   o Ooo</span>|</span><br><span class="line">|<span class="string">         . . Oo*o</span>|</span><br><span class="line">|<span class="string">          . ..=.o</span>|</span><br><span class="line">|<span class="string">            Eo.= </span>|</span><br><span class="line">|<span class="string">              o*B</span>|</span><br><span class="line">+-----------------+</span><br></pre></td></tr></table></figure></p>
+<p>注意：在程序提示输入passphrase时直接输入回车，表示无证书密码。</p>
+<p>2.生成秘钥的默认目录为:~/.ssh,该目录下会生成下面两个文件:</p>
+<p>id_rsa </p>
+<p>id_rsa.pub</p>
+<p>2.实现本地免密登录,将id_rsa.pub中的内容拷贝到authorized_keys</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-<span class="keyword">copy</span>-<span class="built_in">id</span> localhost</span><br></pre></td></tr></table></figure>
+<p>~/.ssh目录下会生成一个新的文件:authorized_keys</p>
+<p>3.完成上述步骤后就可以本地SSH免密登录了,运行下面代码出现一行登录时间就代表本地SSH免密登录成功</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh localhost</span></span><br></pre></td></tr></table></figure>
+<p>下面是本地SSH免密登录成功的标志:<br><figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[root@master1 ~]</span>$ ssh localhost</span><br><span class="line">Last login: Mon Aug <span class="number">27</span> <span class="number">08</span>:<span class="number">41</span>:<span class="number">20</span> <span class="number">2018</span> from <span class="number">192.168.33.2</span></span><br></pre></td></tr></table></figure></p>
+<p>4.如果本机能成功SSH免密登录,<br>先退出SSH登录:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">exit</span></span><br></pre></td></tr></table></figure>
+<p>再执行以下代码将本机的~/.ssh文件夹复制到其他主机上:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/</span>* <span class="number">192.168</span>.<span class="number">33.202</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/</span>* <span class="number">192.168</span>.<span class="number">33.203</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure>
+<p>提示输入密码时,输入远程主机密码回车即可</p>
+<p>5.测试SSH免密登录,这里就不发测试了,大家自行测试</p>
+<hr>
+<p><strong>方法二:</strong></p>
+<p>将每台机器生成的id_rsa.pub追加添加到同一个authorized_keys内,然后再将该authorized_keys发送到其他远程主机上.</p>
+<p>具体步骤如下:<br>1.在master1,master2,master3上分别执行:</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh-keygen -t rsa</span></span><br></pre></td></tr></table></figure>
+<p>与”方法一”内所述一样,一路回车即可,生成秘钥的默认目录为~/.ssh<br>2.接着制作包含master1,master2,master3中所有id_rsa.pub的authorized_keys文件:<br>此处在master 1上生成authorized_keys文件,<br>在master1上执行:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure>
+<p>在master2上执行:<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure></p>
+<p>在master3上执行:<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh-copy-id</span> <span class="selector-tag">-i</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.201</span></span><br></pre></td></tr></table></figure></p>
+<p>注意:此处代码中的”-i”千万不要忘记了!!!</p>
+<p>3.通过scp将master1上生成的authorized_keys文件发送给其他主机:<br>在master1上执行<br><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/authorized</span>_keys <span class="number">192.168</span>.<span class="number">33.202</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~<span class="regexp">/.ssh/authorized</span>_keys <span class="number">192.168</span>.<span class="number">33.203</span><span class="symbol">:~/</span>.ssh</span><br></pre></td></tr></table></figure>
+<p>提示输入密码时,输入远程主机密码回车即可</p>
+<p>5.测试SSH免密登录,可先测试本机免密登录,再测试远程主机远程登录<br>本机登录可用:<br><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ssh localhost</span></span><br></pre></td></tr></table></figure></p>
+<p>远程登录将localhost换成远程主机IP即可<br>比如在master1上登录master2,就在master1上执行:<br><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">ssh</span> 192<span class="selector-class">.168</span><span class="selector-class">.33</span><span class="selector-class">.202</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>相关故障处理:</strong><br>部分人在配置完成后可能出现无法登录的情况,错误代码我不太记得了,欢迎各位读者在下面补充.<br>造成故障的原因是之前配置过程中配置失败,然后重新对SSH免密登录进行配置,配置完成后无法正常登录,解决方法如下:</p>
+<p>删除各主机下~/.ssh目录中的known_hosts文件:<br><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf ~<span class="regexp">/.ssh/</span>known_hosts</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="PengShuaixin 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="PengShuaixin 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+          
+            <a href="/tags/SSH/" rel="tag"><i class="fa fa-tag"></i> SSH</a>
+          
+            <a href="/tags/服务器/" rel="tag"><i class="fa fa-tag"></i> 服务器</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/在Windows中安装Hadoop常见错误解决方法/" rel="next" title="在Windows中安装Hadoop常见错误解决方法">
+                <i class="fa fa-chevron-left"></i> 在Windows中安装Hadoop常见错误解决方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/Eclipse中GitHub插件的简单使用/" rel="prev" title="Eclipse中GitHub插件的简单使用">
+                Eclipse中GitHub插件的简单使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  <div>
+    
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">------ 本文结束------</div>
+    
+</div>
+    
+  </div>
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+      <div id="sidebar-dimmer"></div>
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="PengShuaixin">
+            
+              <p class="site-author-name" itemprop="name">PengShuaixin</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">27</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <span class="exturl" data-url="aHR0cHM6Ly9naXRodWIuY29tL1BlbmdTaHVhaXhpbg==" title="GitHub &rarr; https://github.com/PengShuaixin"><i class="fa fa-fw fa-github"></i>GitHub</span>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <span class="exturl" data-url="aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTA5OTM1MTQ=" title="CSDN &rarr; https://blog.csdn.net/u010993514"><i class="fa fa-fw fa-globe"></i>CSDN</span>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">PengShuaixin</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">200k</span>
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="总访客量">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="总访问量">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+	  hm.type = "text/javascript";
+      hm.src = "http://tajs.qq.com/stats?sId=66106613";
+	  hm.charset = "UTF-8"
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+	  hm.type = "text/javascript";
+      hm.src = "http://tajs.qq.com/stats?sId=66107215";
+	  hm.charset = "UTF-8"
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+      
+        
+      
+  
+  <script type="text/javascript" color="0,0,0" opacity="0.3" zindex="-1" count="80" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.5.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.5.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.5.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.5.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.5.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'yFTiPXVcVQ7XCx0ccCI9u9UV-gzGzoHsz',
+        appKey: 'yYG26hWbUNuiaQJBn91mWLBD',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: false
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
     // Popup Window;
     var isfetched = false;
     var isXml = true;
@@ -331,7 +1501,16 @@
         onPopupClose();
       }
     });
-  </script><script>
+  </script>
+
+
+
+
+
+  
+
+  
+  <script>
     
     function addCount(Counter) {
       var $visitors = $(".leancloud_visitors");
@@ -385,4 +1564,121 @@
           
         })
     });
-  </script><script>!function(){var t=document.createElement("script"),e=window.location.protocol.split(":")[0];t.src="https"===e?"https://zz.bdstatic.com/linksubmit/push.js":"http://push.zhanzhang.baidu.com/push.js";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}()</script><script type="text/javascript" src="/js/src/js.cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.5.0"></script><script type="text/javascript" src="/js/src/exturl.js?v=6.5.0"></script><style>.copy-btn{display:inline-block;padding:6px 12px;font-size:13px;font-weight:700;line-height:20px;color:#333;white-space:nowrap;vertical-align:middle;cursor:pointer;background-color:#eee;background-image:linear-gradient(#fcfcfc,#eee);border:1px solid #d5d5d5;border-radius:3px;user-select:none;outline:0}.highlight-wrap .copy-btn{transition:opacity .3s ease-in-out;opacity:0;padding:2px 6px;position:absolute;right:4px;top:8px}.highlight-wrap .copy-btn:focus,.highlight-wrap:hover .copy-btn{opacity:1}.highlight-wrap{position:relative}</style><script>$(".highlight").each(function(t,e){var n=$("<div>").addClass("highlight-wrap");$(e).after(n),n.append($("<button>").addClass("copy-btn").append("复制").on("click",function(t){var e=$(this).parent().find(".code").find(".line").map(function(t,e){return $(e).text()}).toArray().join("\n"),n=document.createElement("textarea");document.body.appendChild(n),n.style.position="absolute",n.style.top="0px",n.style.left="0px",n.value=e,n.select(),n.focus();var o=document.execCommand("copy");document.body.removeChild(n),o?$(this).text("复制成功"):$(this).text("复制失败"),$(this).blur()})).on("mouseleave",function(t){var e=$(this).find(".copy-btn");setTimeout(function(){e.text("复制")},300)}).append(e)})</script></body></html>
+  </script>
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=6.5.0"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=6.5.0"></script>
+
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=6.5.0"></script>
+
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('复制成功')
+          else $(this).text('复制失败')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('复制')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+
+  
+
+</body>
+</html>
